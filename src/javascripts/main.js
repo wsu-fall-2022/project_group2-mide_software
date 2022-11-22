@@ -152,6 +152,11 @@ mesh.translateZ(-100)
 mesh.material.map = textures['wall']
 scene.add(mesh)
 
+//second side of wall
+let wallback = mesh.clone()
+wallback.rotateY(Math.PI)
+scene.add(wallback)
+
 // Add light sources
 let ambientLight = new THREE.AmbientLight(0xFFFFFF)
 let directionalLight = new THREE.DirectionalLight(0xFFFFFF)
