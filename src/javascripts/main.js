@@ -37,6 +37,9 @@ let moveBackward = false;
 let moveLeft = false;
 let moveRight = false;
 let playerSpeed = 5;
+let selectedWeapon = 1;
+let gun;
+let projectile;
 
 let controls = {
     ambient: true,
@@ -58,11 +61,6 @@ scene.add( cube );
 
 let playerControls = new PointerLockControls(camera, renderer.domElement)
 
-canvas.addEventListener( 'click', function () {
-
-    playerControls.lock();
-
-} );
 
 scene.add( playerControls.getObject() );
 
@@ -88,6 +86,14 @@ playerControls.onKeyDown = function ( event ) {
         case 'ArrowRight':
         case 'KeyD':
             moveRight = true;
+            break;
+
+        case 'KeyR':
+            selectedWeapon = selectedWeapon + 1;
+            scene.remove(gun)
+            loadGun()
+
+            console.log(selectedWeapon)
             break;
     }
 }
@@ -116,7 +122,6 @@ playerControls.onKeyUp = function ( event ) {
             break;
 
     }
-
 }
 
 function onWindowResize() {
@@ -128,6 +133,17 @@ function onWindowResize() {
 
 }
 
+window.addEventListener( 'click', function () {
+    if (playerControls.isLocked === true)
+    {
+        console.log('Bang!')
+    }
+
+} );
+canvas.addEventListener( 'click', function () {
+    playerControls.lock();
+
+} );
 window.addEventListener( 'keydown', playerControls.onKeyDown );
 window.addEventListener( 'keyup', playerControls.onKeyUp );
 window.addEventListener( 'resize', onWindowResize );
@@ -142,6 +158,9 @@ let textures = {
         renderer.render(scene, camera)
     }),
     wall: texLoader.load('./images/Stone Wall Texture.jpg', function () {
+        renderer.render(scene, camera)
+    }),
+    shotgun: texLoader.load('./images/Shotgun Barrel Texture.jpg', function () {
         renderer.render(scene, camera)
     })
 }
@@ -163,8 +182,8 @@ mesh.rotateY(-Math.PI / 2)
 mesh.translateZ(-100)
 mesh.material.map = textures['wall']
 scene.add(mesh)
-//Adding to list of things that player can collide with
-collidableMeshList.push(mesh)
+
+collidableMeshList.push(mesh) //Adding to list of things that player can collide with
 
 //second side of wall
 let wallback = mesh.clone()
@@ -172,6 +191,37 @@ wallback.rotateY(Math.PI)
 scene.add(wallback)
 collidableMeshList.push(wallback)
 
+function loadGun()
+{
+    if (selectedWeapon === 3)
+    {
+        selectedWeapon = 1
+    }
+    if (selectedWeapon === 1){
+        // shotgun
+        gun = new THREE.CylinderGeometry(0.2, 1,40, 30, 30)
+        material = new THREE.MeshPhongMaterial({color: 0x555555})
+        mesh = new THREE.Mesh(gun, material)
+        mesh.translateY(-2)
+        mesh.translateZ(5)
+        mesh.rotateX(-Math.PI/1.9)
+        mesh.rotateY(-Math.PI/2)
+        mesh.material.map = textures['shotgun']
+        camera.add(mesh)
+    }
+    else if (selectedWeapon === 2){
+        // BFG 9000
+        gun = new THREE.CylinderGeometry(0.2, 1,40, 30, 30)
+        material = new THREE.MeshPhongMaterial({color: 0x999999})
+        mesh = new THREE.Mesh(gun, material)
+        mesh.translateY(-2)
+        mesh.translateZ(5)
+        mesh.rotateX(-Math.PI/1.9)
+        mesh.rotateY(-Math.PI/2)
+        mesh.material.map = textures['shotgun']
+        camera.add(mesh)
+    }}
+loadGun()
 
 //Level Model
 let mtl_file = './Models/Level/doom_E1M1.mtl';
