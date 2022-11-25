@@ -1,6 +1,8 @@
 // Required by Webpack - do not touch
 import * as THREE from "three";
 import {PointerLockControls} from "three/examples/jsm/controls/PointerLockControls";
+import {OBJLoader} from 'three/examples/jsm/loaders/OBJLoader.js';
+import {MTLLoader} from 'three/examples/jsm/loaders/MTLLoader.js';
 
 // Required by Webpack - do not touch
 require.context('../', true, /\.(html|json|txt|dat)$/i)
@@ -169,6 +171,27 @@ let wallback = mesh.clone()
 wallback.rotateY(Math.PI)
 scene.add(wallback)
 collidableMeshList.push(wallback)
+
+
+//Level Model
+let mtl_file = './Models/Level/doom_E1M1.mtl';
+let obj_file = './Models/Level/doom_E1M1.obj';
+
+let mtlLoader = new MTLLoader();
+mtlLoader.load(mtl_file,
+    function(materials){
+
+        materials.preload()
+
+        var objLoader = new OBJLoader();
+        objLoader.setMaterials(materials)
+        objLoader.load(
+            obj_file,
+            function (object){
+                object.name = 'charizard'
+                scene.add(object);
+            });
+    });
 
 // Add light sources
 let ambientLight = new THREE.AmbientLight(0xFFFFFF)
