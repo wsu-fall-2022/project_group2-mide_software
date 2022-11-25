@@ -19,6 +19,11 @@ let scene = new THREE.Scene()
 let renderer = new THREE.WebGLRenderer({canvas})
 let camera = new THREE.PerspectiveCamera(45, canvas.clientWidth / canvas.clientWidth, .1, 10000)
 
+//player
+let cube;
+//list of things that player can collide with
+var collidableMeshList = [];
+
 renderer.setSize(canvas.clientWidth, canvas.clientHeight)
 renderer.setClearColor(0xFFEEEE)
 
@@ -43,6 +48,11 @@ let controls = {
 
 camera.position.set(0, 10, 0)
 camera.rotation.set(0, 0, 0)
+let cubeGeometry = new THREE.CubeGeometry(50,50,50,1,1,1);
+let wireMaterial = new THREE.MeshBasicMaterial( { color: 0xff0000} );
+cube = new THREE.Mesh( cubeGeometry, wireMaterial );
+cube.position.set(camera.position.x,camera.position.y,camera.position.z)
+scene.add( cube );
 
 let playerControls = new PointerLockControls(camera, renderer.domElement)
 
@@ -144,18 +154,21 @@ mesh.material.map = textures['floor']
 scene.add(mesh)
 
 // Adding a plane (wall Right)
-geometry = new THREE.PlaneGeometry(200, 200)
+geometry = new THREE.BoxGeometry(200, 200,0)
 material = new THREE.MeshPhongMaterial({color: 0x9c9283})
 mesh = new THREE.Mesh(geometry, material)
 mesh.rotateY(-Math.PI / 2)
 mesh.translateZ(-100)
 mesh.material.map = textures['wall']
 scene.add(mesh)
+//Adding to list of things that player can collide with
+collidableMeshList.push(mesh)
 
 //second side of wall
 let wallback = mesh.clone()
 wallback.rotateY(Math.PI)
 scene.add(wallback)
+collidableMeshList.push(wallback)
 
 // Add light sources
 let ambientLight = new THREE.AmbientLight(0xFFFFFF)
@@ -251,6 +264,25 @@ function animate() {
     }
     if (moveRight === true){
         playerControls.moveRight(  playerSpeed)
+    }
+    cube.position.set(camera.position.x,camera.position.y,camera.position.z)
+    let originPoint = cube.position.clone();
+    for (let vertexIndex = 0; vertexIndex < cube.geometry.vertices.length; vertexIndex++)
+    {
+        let localVertex = cube.geometry.vertices[vertexIndex].clone();
+        let globalVertex = localVertex.applyMatrix4( cube.matrix );
+        let directionVector = globalVertex.sub( cube.position );
+
+        let ray = new THREE.Raycaster( originPoint, directionVector.clone().normalize() );
+        let collisionResults = ray.intersectObjects( collidableMeshList );
+        if ( collisionResults.length > 0 && collisionResults[0].distance < directionVector.length() ) {
+            //appendText(" Hit ");
+            console.log("Hit")
+            //console.log(collisionResults.length)
+            //console.log(directionVector.length())
+
+            //console.log(collisionResults[0].distance)
+        }
     }
 
     renderer.render( scene, camera )
