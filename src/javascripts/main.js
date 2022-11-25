@@ -188,8 +188,9 @@ mtlLoader.load(mtl_file,
         objLoader.load(
             obj_file,
             function (object){
-                object.name = 'charizard'
+                object.name = 'level'
                 scene.add(object);
+                collidableMeshList.push(object)
             });
     });
 
