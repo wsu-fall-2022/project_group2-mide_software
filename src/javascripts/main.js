@@ -3,6 +3,7 @@ import * as THREE from "three";
 import {PointerLockControls} from "three/examples/jsm/controls/PointerLockControls";
 import {OBJLoader} from 'three/examples/jsm/loaders/OBJLoader.js';
 import {MTLLoader} from 'three/examples/jsm/loaders/MTLLoader.js';
+import {BallProjectile} from "./projectile";
 
 // Required by Webpack - do not touch
 require.context('../', true, /\.(html|json|txt|dat)$/i)
@@ -17,12 +18,12 @@ document.querySelector('#std_name').innerHTML = `<strong>${std_name}</strong>`
 // TODO
 
 let canvas = document.querySelector('#webgl-scene')
-let scene = new THREE.Scene()
+export let scene = new THREE.Scene()
 let renderer = new THREE.WebGLRenderer({canvas})
 let camera = new THREE.PerspectiveCamera(45, canvas.clientWidth / canvas.clientWidth, .1, 10000)
 
 //player
-let cube;
+let player;
 //list of things that player can collide with
 var collidableMeshList = [];
 
@@ -37,9 +38,8 @@ let moveBackward = false;
 let moveLeft = false;
 let moveRight = false;
 let playerSpeed = 5;
-let selectedWeapon = 1;
-let gun;
-let projectile;
+let selectedWeapon = 2;
+let gunMesh;
 
 let controls = {
     ambient: true,
@@ -51,19 +51,18 @@ let controls = {
     spotlight_target: 'scene'
 }
 
+//player hitbox
 camera.position.set(0, 10, 0)
 camera.rotation.set(0, 0, 0)
 let cubeGeometry = new THREE.CubeGeometry(50,50,50,1,1,1);
 let wireMaterial = new THREE.MeshBasicMaterial( { color: 0xff0000} );
-cube = new THREE.Mesh( cubeGeometry, wireMaterial );
-cube.position.set(camera.position.x,camera.position.y,camera.position.z)
-scene.add( cube );
+player = new THREE.Mesh( cubeGeometry, wireMaterial );
+player.position.set(camera.position.x,camera.position.y,camera.position.z)
+scene.add( player );
 
+//player controls
 let playerControls = new PointerLockControls(camera, renderer.domElement)
-
-
 scene.add( playerControls.getObject() );
-
 playerControls.onKeyDown = function ( event ) {
 
     switch ( event.code ) {
@@ -89,8 +88,9 @@ playerControls.onKeyDown = function ( event ) {
             break;
 
         case 'KeyR':
-            selectedWeapon = selectedWeapon + 1;
-            scene.remove(gun)
+        case 'Space':
+            selectedWeapon += 1;
+            camera.remove(gunMesh)
             loadGun()
 
             console.log(selectedWeapon)
@@ -123,7 +123,6 @@ playerControls.onKeyUp = function ( event ) {
 
     }
 }
-
 function onWindowResize() {
 
     camera.aspect = window.innerWidth / window.innerHeight;
@@ -133,13 +132,22 @@ function onWindowResize() {
 
 }
 
+//click controls
 window.addEventListener( 'click', function () {
-    if (playerControls.isLocked === true)
-    {
+    if (playerControls.isLocked === true) {
+        if (selectedWeapon === 1) {
+
+        }
+        else if (selectedWeapon === 2) {
+            let ballProjectile = new BallProjectile()
+            ballProjectile.BFGballMesh.position.set(player.position.x, player.position.y, player.position.z-80)
+            ballProjectile.BFGballMesh.rotation.set(player.rotation.x, player.rotation.y, player.rotation.z)
+        }
         console.log('Bang!')
     }
 
 } );
+
 canvas.addEventListener( 'click', function () {
     playerControls.lock();
 
@@ -150,7 +158,7 @@ window.addEventListener( 'resize', onWindowResize );
 
 // Loading textures
 let texLoader = new THREE.TextureLoader()
-let textures = {
+export let textures = {
     floor: texLoader.load('./images/Stone Floor Texture.png', function (texture) {
         texture.wrapS = THREE.RepeatWrapping
         texture.wrapT = THREE.RepeatWrapping
@@ -161,6 +169,12 @@ let textures = {
         renderer.render(scene, camera)
     }),
     shotgun: texLoader.load('./images/Shotgun Barrel Texture.jpg', function () {
+        renderer.render(scene, camera)
+    }),
+    BFGball1: texLoader.load('./images/Lightning Texture.png', function (texture) {
+        renderer.render(scene, camera)
+    }),
+    BFGball2: texLoader.load('./images/Lighting Texture 3.jpg', function (texture) {
         renderer.render(scene, camera)
     })
 }
@@ -197,29 +211,30 @@ function loadGun()
     {
         selectedWeapon = 1
     }
+
     if (selectedWeapon === 1){
         // shotgun
-        gun = new THREE.CylinderGeometry(0.2, 1,40, 30, 30)
+        geometry = new THREE.CylinderGeometry(0.2, 1,40, 30, 30)
         material = new THREE.MeshPhongMaterial({color: 0x555555})
-        mesh = new THREE.Mesh(gun, material)
-        mesh.translateY(-2)
-        mesh.translateZ(5)
-        mesh.rotateX(-Math.PI/1.9)
-        mesh.rotateY(-Math.PI/2)
-        mesh.material.map = textures['shotgun']
-        camera.add(mesh)
+        gunMesh = new THREE.Mesh(geometry, material)
+        gunMesh.translateY(-2)
+        gunMesh.translateZ(5)
+        gunMesh.rotateX(-Math.PI/1.9)
+        gunMesh.rotateY(-Math.PI/2)
+        gunMesh.material.map = textures['shotgun']
+        camera.add(gunMesh)
     }
     else if (selectedWeapon === 2){
         // BFG 9000
-        gun = new THREE.CylinderGeometry(0.2, 1,40, 30, 30)
+        geometry = new THREE.CylinderGeometry(1, 1,40, 30, 30)
         material = new THREE.MeshPhongMaterial({color: 0x999999})
-        mesh = new THREE.Mesh(gun, material)
-        mesh.translateY(-2)
-        mesh.translateZ(5)
-        mesh.rotateX(-Math.PI/1.9)
-        mesh.rotateY(-Math.PI/2)
-        mesh.material.map = textures['shotgun']
-        camera.add(mesh)
+        gunMesh = new THREE.Mesh(geometry, material)
+        gunMesh.translateY(-2)
+        gunMesh.translateZ(5)
+        gunMesh.rotateX(-Math.PI/1.9)
+        gunMesh.rotateY(-Math.PI/2)
+        gunMesh.material.map = textures['shotgun']
+        camera.add(gunMesh)
     }}
 loadGun()
 
@@ -339,13 +354,14 @@ function animate() {
     if (moveRight === true){
         playerControls.moveRight(  playerSpeed)
     }
-    cube.position.set(camera.position.x,camera.position.y,camera.position.z)
-    let originPoint = cube.position.clone();
-    for (let vertexIndex = 0; vertexIndex < cube.geometry.vertices.length; vertexIndex++)
+
+    player.position.set(camera.position.x,camera.position.y,camera.position.z)
+    let originPoint = player.position.clone();
+    for (let vertexIndex = 0; vertexIndex < player.geometry.vertices.length; vertexIndex++)
     {
-        let localVertex = cube.geometry.vertices[vertexIndex].clone();
-        let globalVertex = localVertex.applyMatrix4( cube.matrix );
-        let directionVector = globalVertex.sub( cube.position );
+        let localVertex = player.geometry.vertices[vertexIndex].clone();
+        let globalVertex = localVertex.applyMatrix4( player.matrix );
+        let directionVector = globalVertex.sub( player.position );
 
         let ray = new THREE.Raycaster( originPoint, directionVector.clone().normalize() );
         let collisionResults = ray.intersectObjects( collidableMeshList );
