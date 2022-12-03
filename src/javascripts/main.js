@@ -4,6 +4,7 @@ import {PointerLockControls} from "three/examples/jsm/controls/PointerLockContro
 import {OBJLoader} from 'three/examples/jsm/loaders/OBJLoader.js';
 import {MTLLoader} from 'three/examples/jsm/loaders/MTLLoader.js';
 import {BallProjectile} from "./projectile";
+import {assertObject} from "@babel/core/lib/config/validation/option-assertions";
 
 // Required by Webpack - do not touch
 require.context('../', true, /\.(html|json|txt|dat)$/i)
@@ -135,15 +136,7 @@ function onWindowResize() {
 //click controls
 window.addEventListener( 'click', function () {
     if (playerControls.isLocked === true) {
-        if (selectedWeapon === 1) {
-
-        }
-        else if (selectedWeapon === 2) {
-            let ballProjectile = new BallProjectile()
-            ballProjectile.BFGballMesh.position.set(player.position.x, player.position.y, player.position.z-80)
-            ballProjectile.BFGballMesh.rotation.set(player.rotation.x, player.rotation.y, player.rotation.z)
-        }
-        console.log('Bang!')
+        fireGun()
     }
 
 } );
@@ -174,7 +167,13 @@ export let textures = {
     BFGball1: texLoader.load('./images/Lightning Texture.png', function (texture) {
         renderer.render(scene, camera)
     }),
-    BFGball2: texLoader.load('./images/Lighting Texture 3.jpg', function (texture) {
+    BFGball2: texLoader.load('./images/Electricity texture 4.png', function (texture) {
+        renderer.render(scene, camera)
+    }),
+    BFGgun: texLoader.load('./images/BFG Texture.jpg', function (texture) {
+        texture.wrapS = THREE.RepeatWrapping
+        texture.wrapT = THREE.RepeatWrapping
+        texture.repeat.set(6, 3)
         renderer.render(scene, camera)
     })
 }
@@ -232,11 +231,30 @@ function loadGun()
         gunMesh.translateY(-2)
         gunMesh.translateZ(5)
         gunMesh.rotateX(-Math.PI/1.9)
-        gunMesh.rotateY(-Math.PI/2)
-        gunMesh.material.map = textures['shotgun']
+        gunMesh.rotateY(Math.PI)
+        gunMesh.material.map = textures['BFGgun']
         camera.add(gunMesh)
+
+        //point in space where the projectile spawns in
+        geometry = new THREE.SphereGeometry(1, 1,1)
+        material = new THREE.MeshPhongMaterial({color: 0x999999})
+        let pointMesh = new THREE.Mesh(geometry, material)
+        scene.add(pointMesh)
     }}
 loadGun()
+
+function fireGun() {
+    if (selectedWeapon === 1) {
+
+    }
+    else if (selectedWeapon === 2) {
+        let ballProjectile = new BallProjectile()
+        let relativePositionVector = new THREE.Vector3(0, -10, -50).applyQuaternion(camera.quaternion)
+        ballProjectile.BFGballMesh.quaternion.copy(camera.quaternion)
+        ballProjectile.BFGballMesh.position.copy(camera.position).add(relativePositionVector)
+    }
+    console.log('Bang!')
+}
 
 //Level Model
 let mtl_file = './Models/Level/doom_E1M1.mtl';
