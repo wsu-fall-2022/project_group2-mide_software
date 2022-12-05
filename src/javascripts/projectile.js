@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import {textures, scene} from "./main";
+import {AnimationClip, AnimationMixer, VectorKeyframeTrack} from "three";
 
 export class BallProjectile
 {

@@ -4,7 +4,6 @@ import {PointerLockControls} from "three/examples/jsm/controls/PointerLockContro
 import {OBJLoader} from 'three/examples/jsm/loaders/OBJLoader.js';
 import {MTLLoader} from 'three/examples/jsm/loaders/MTLLoader.js';
 import {BallProjectile} from "./projectile";
-import {AnimationClip, AnimationMixer, NumberKeyframeTrack, VectorKeyframeTrack} from "three";
 
 // Required by Webpack - do not touch
 require.context('../', true, /\.(html|json|txt|dat)$/i)
@@ -25,13 +24,12 @@ let camera = new THREE.PerspectiveCamera(45, canvas.clientWidth / canvas.clientW
 
 //player
 let player;
-let updatables = []
 //list of things that player can collide with
 let collidableMeshList = [];
 
+//
 renderer.setSize(canvas.clientWidth, canvas.clientHeight)
 renderer.setClearColor(0xFFEEEE)
-
 let axes = new THREE.AxesHelper(10)
 scene.add(axes)
 
@@ -55,9 +53,10 @@ let controls = {
     spotlight_target: 'scene'
 }
 
-//player hitbox
 camera.position.set(0, 10, 0)
 camera.rotation.set(0, 0, 0)
+
+//player hitbox
 let cubeGeometry = new THREE.CubeGeometry(50,50,50,1,1,1);
 let wireMaterial = new THREE.MeshBasicMaterial( { color: 0xff0000} );
 player = new THREE.Mesh( cubeGeometry, wireMaterial );
@@ -187,6 +186,11 @@ export let textures = {
         texture.wrapT = THREE.RepeatWrapping
         texture.repeat.set(7, 3.15)
         renderer.render(scene, camera)
+    }),
+    Icon_of_Sin: texLoader.load('./images/Icon of Sin Texture.jpg', function (texture) {
+        texture.wrapS = THREE.RepeatWrapping
+        texture.repeat.set(2, 1)
+        renderer.render(scene, camera)
     })
 }
 
@@ -207,7 +211,6 @@ mesh.rotateY(-Math.PI / 2)
 mesh.translateZ(-100)
 mesh.material.map = textures['wall']
 scene.add(mesh)
-
 collidableMeshList.push(mesh) //Adding to list of things that player can collide with
 
 //second side of wall
@@ -216,6 +219,45 @@ wallback.rotateY(Math.PI)
 scene.add(wallback)
 collidableMeshList.push(wallback)
 
+//Level Model
+let mtl_file = './Models/Level/doom_E1M1.mtl';
+let obj_file = './Models/Level/doom_E1M1.obj';
+let mtlLoader = new MTLLoader();
+mtlLoader.load(mtl_file,
+    function(materials){
+
+        materials.preload()
+
+        var objLoader = new OBJLoader();
+        objLoader.setMaterials(materials)
+        objLoader.load(
+            obj_file,
+            function (object){
+                object.name = 'level'
+                scene.add(object);
+                collidableMeshList.push(object)
+            });
+    });
+
+// Adding a cylinder (Icon of Sin)
+geometry = new THREE.CylinderGeometry(100, 100, 200,40, 40)
+material = new THREE.MeshPhongMaterial({color: 0xFFFFFF})
+let Icon_of_sin_mesh = new THREE.Mesh(geometry, material)
+Icon_of_sin_mesh.translateZ(1000)
+Icon_of_sin_mesh.translateX(-1000)
+Icon_of_sin_mesh.rotateY(-Math.PI*3/4)
+Icon_of_sin_mesh.material.map = textures['Icon_of_Sin']
+scene.add(Icon_of_sin_mesh)
+
+// Add light sources
+let ambientLight = new THREE.AmbientLight(0xFFFFFF)
+let directionalLight = new THREE.DirectionalLight(0xFFFFFF)
+let pointLight = new THREE.PointLight(0xFFFFFF)
+pointLight.position.set(0, 100, 0)
+let spotLight = new THREE.SpotLight(0xFFFFFF)
+spotLight.position.set(100, 150, 100)
+
+//swaps between guns
 function loadGun()
 {
     if (selectedWeapon === 3)
@@ -249,6 +291,7 @@ function loadGun()
     }}
 loadGun()
 
+//spawns the right projectile for the selected gun
 function fireGun() {
     if (selectedWeapon === 1) {
         console.log('Wheres the demon shattering Kaboom?')
@@ -260,54 +303,11 @@ function fireGun() {
         let relativePositionVector = new THREE.Vector3(0, -15, -75).applyQuaternion(camera.quaternion)
         ballProjectile.BFGballMesh.quaternion.copy(camera.quaternion)
         ballProjectile.BFGballMesh.position.copy(camera.position).add(relativePositionVector)
-
-        //moves the BFGball forward using a bunch of animation libraries.
-        let ballEndPointVector = new THREE.Vector3(0, 0, -2000).applyQuaternion(ballProjectile.BFGballMesh.quaternion)
-        let times = [0, 1]
-        let positions = [ballProjectile.BFGballMesh.position, ballEndPointVector]
-        let positionKeyFrame = new VectorKeyframeTrack(".position", times, positions)
-        let positionAnimation = new AnimationClip("positionAnimation", 100, [positionKeyFrame])
-
-        let BFGmixer = new AnimationMixer(ballProjectile.BFGballMesh)
-        let action = BFGmixer.clipAction(positionAnimation);
-        action.play()
-
-        ballProjectile.BFGballMesh.tick = (delta) => BFGmixer.update(delta)
-        updatables.push(ballProjectile.BFGballMesh)
-
         console.log('Vzoom!')
     }
 }
 
-//Level Model
-let mtl_file = './Models/Level/doom_E1M1.mtl';
-let obj_file = './Models/Level/doom_E1M1.obj';
-
-let mtlLoader = new MTLLoader();
-mtlLoader.load(mtl_file,
-    function(materials){
-
-        materials.preload()
-
-        var objLoader = new OBJLoader();
-        objLoader.setMaterials(materials)
-        objLoader.load(
-            obj_file,
-            function (object){
-                object.name = 'level'
-                scene.add(object);
-                collidableMeshList.push(object)
-            });
-    });
-
-// Add light sources
-let ambientLight = new THREE.AmbientLight(0xFFFFFF)
-let directionalLight = new THREE.DirectionalLight(0xFFFFFF)
-let pointLight = new THREE.PointLight(0xFFFFFF)
-pointLight.position.set(0, 100, 0)
-let spotLight = new THREE.SpotLight(0xFFFFFF)
-spotLight.position.set(100, 150, 100)
-
+//handles time related functions like movement and animations
 function animate() {
     function lights(){
         if(controls.material === "Lambert")
@@ -383,6 +383,7 @@ function animate() {
         }
     } lights()
 
+    //updates player movement
     if (moveForward === true){
         playerControls.moveForward(playerSpeed)
     }
@@ -396,6 +397,7 @@ function animate() {
         playerControls.moveRight(playerSpeed/2)
     }
 
+    //updates the collision box for the player
     player.position.set(camera.position.x,camera.position.y,camera.position.z)
     let originPoint = player.position.clone();
     for (let vertexIndex = 0; vertexIndex < player.geometry.vertices.length; vertexIndex++)
@@ -415,6 +417,9 @@ function animate() {
             //console.log(collisionResults[0].distance)
         }
     }
+
+    Icon_of_sin_mesh.rotateY(0.003)
+    console.log(Icon_of_sin_mesh.rotation.y)
 
     renderer.render( scene, camera )
     requestAnimationFrame( animate )
