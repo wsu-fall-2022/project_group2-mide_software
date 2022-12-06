@@ -22,17 +22,14 @@ export let scene = new THREE.Scene()
 let renderer = new THREE.WebGLRenderer({canvas})
 let camera = new THREE.PerspectiveCamera(45, canvas.clientWidth / canvas.clientWidth, .1, 10000)
 
-//player
-let player;
-//list of things that player can collide with
-let collidableMeshList = [];
-
-//
 renderer.setSize(canvas.clientWidth, canvas.clientHeight)
 renderer.setClearColor(0xFFEEEE)
 let axes = new THREE.AxesHelper(10)
 scene.add(axes)
 
+// player variables
+let player;
+let collidableMeshList = []; //list of things that player can collide with
 let moveForward = false;
 let moveBackward = false;
 let moveLeft = false;
@@ -42,6 +39,13 @@ let playerRunSpeed = 6.5;
 let playerSpeed = playerDefaultSpeed;
 let selectedWeapon = 2;
 let gunMesh;
+
+//BFG projectile variables
+let BFGprojectileObjects = [];
+let projectileSpeed = 8;
+let BFGballLifeSpan = 400;
+let BFGballExplosionSpeed = 1;
+let BFGballExplosionDuration = 100;
 
 let controls = {
     ambient: true,
@@ -303,6 +307,11 @@ function fireGun() {
         let relativePositionVector = new THREE.Vector3(0, -15, -75).applyQuaternion(camera.quaternion)
         ballProjectile.BFGballMesh.quaternion.copy(camera.quaternion)
         ballProjectile.BFGballMesh.position.copy(camera.position).add(relativePositionVector)
+
+        //movement to be animated
+        BFGprojectileObjects.push(ballProjectile);
+        ballProjectile.listPosition = BFGprojectileObjects.length - 1;
+
         console.log('Vzoom!')
     }
 }
@@ -418,8 +427,30 @@ function animate() {
         }
     }
 
+    //Icon of Sin rotation animation
     Icon_of_sin_mesh.rotateY(0.003)
-    console.log(Icon_of_sin_mesh.rotation.y)
+
+    //BFG projectile animations
+    if (BFGprojectileObjects.length > 0) {
+        for (let i = 0; i < BFGprojectileObjects.length; i++) {
+           if (BFGprojectileObjects[i].moveTimer < BFGballLifeSpan) {
+               let movement = new THREE.Vector3(0, 0, -projectileSpeed).applyQuaternion(BFGprojectileObjects[i].BFGballMesh.quaternion)
+               BFGprojectileObjects[i].BFGballMesh.position.add(movement)
+               BFGprojectileObjects[i].moveTimer += 1
+           }
+           else if (BFGprojectileObjects[i].explodeTimer < BFGballExplosionDuration) {
+               let explosion = new THREE.Vector3(BFGballExplosionSpeed, BFGballExplosionSpeed, BFGballExplosionSpeed)
+               BFGprojectileObjects[i].BFGballMesh.scale.add(explosion)
+               BFGprojectileObjects[i].explodeTimer += 1
+               console.log("boom")
+           }
+           else {
+               scene.remove(BFGprojectileObjects[i].BFGballMesh)
+               BFGprojectileObjects.splice(i, 1)
+               console.log("removed")
+           }
+        }
+    }
 
     renderer.render( scene, camera )
     requestAnimationFrame( animate )
