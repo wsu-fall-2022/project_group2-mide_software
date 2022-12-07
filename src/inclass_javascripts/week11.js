@@ -91,6 +91,7 @@ export function displayCubes(){
     }
 
     animate()
+
 }
 
 export function displaySolar(){

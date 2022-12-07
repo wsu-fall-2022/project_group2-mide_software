@@ -30,6 +30,7 @@ scene.add(axes)
 // player variables
 let player;
 let collidableMeshList = []; //list of things that player can collide with
+let enemycollidableMeshList
 let moveForward = false;
 let moveBackward = false;
 let moveLeft = false;
@@ -417,6 +418,7 @@ function animate() {
 
         let ray = new THREE.Raycaster( originPoint, directionVector.clone().normalize() );
         let collisionResults = ray.intersectObjects( collidableMeshList );
+        console.log(collisionResults.length)
         if ( collisionResults.length > 0 && collisionResults[0].distance < directionVector.length() ) {
             //appendText(" Hit ");
             console.log("Hit")
@@ -456,3 +458,6 @@ function animate() {
     requestAnimationFrame( animate )
 }
 animate()
+document.querySelector('aside').innerHTML = "<p>Use WASD to move\n</p>" +
+    "<p>Use mouse to look around\n</p>" +
+    "<p>Left click to shoot</p>"
