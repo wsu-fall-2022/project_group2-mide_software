@@ -253,6 +253,7 @@ Icon_of_sin_mesh.translateX(-1000)
 Icon_of_sin_mesh.rotateY(-Math.PI*3/4)
 Icon_of_sin_mesh.material.map = textures['Icon_of_Sin']
 scene.add(Icon_of_sin_mesh)
+collidableMeshList.push(Icon_of_sin_mesh)
 
 // Add light sources
 let ambientLight = new THREE.AmbientLight(0xFFFFFF)
@@ -393,7 +394,8 @@ function animate() {
         }
     } lights()
 
-    //updates player movement
+
+//updates player movement
     if (moveForward === true){
         playerControls.moveForward(playerSpeed)
     }
@@ -406,7 +408,6 @@ function animate() {
     if (moveRight === true){
         playerControls.moveRight(playerSpeed/2)
     }
-
     //updates the collision box for the player
     player.position.set(camera.position.x,camera.position.y,camera.position.z)
     let originPoint = player.position.clone();
@@ -421,13 +422,25 @@ function animate() {
         console.log(collisionResults.length)
         if ( collisionResults.length > 0 && collisionResults[0].distance < directionVector.length() ) {
             //appendText(" Hit ");
-            console.log("Hit")
+            if (moveForward === true){
+                playerControls.moveForward(-playerSpeed)
+            }
+            if (moveBackward === true){
+                playerControls.moveForward(playerSpeed)
+            }
+            if (moveLeft === true){
+                playerControls.moveRight(playerSpeed/2)
+            }
+            if (moveRight === true){
+                playerControls.moveRight(-playerSpeed/2)
+            }
             //console.log(collisionResults.length)
             //console.log(directionVector.length())
 
             //console.log(collisionResults[0].distance)
         }
     }
+
 
     //Icon of Sin rotation animation
     Icon_of_sin_mesh.rotateY(0.003)
@@ -460,4 +473,4 @@ function animate() {
 animate()
 document.querySelector('aside').innerHTML = "<p>Use WASD to move\n</p>" +
     "<p>Use mouse to look around\n</p>" +
-    "<p>Left click to shoot</p>"
+    "<p>Click to shoot</p>"+ "<p>Shoot the Skuulll</p>"
