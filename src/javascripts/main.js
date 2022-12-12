@@ -419,7 +419,6 @@ function animate() {
 
         let ray = new THREE.Raycaster( originPoint, directionVector.clone().normalize() );
         let collisionResults = ray.intersectObjects( collidableMeshList );
-        console.log(collisionResults.length)
         if ( collisionResults.length > 0 && collisionResults[0].distance < directionVector.length() ) {
             //appendText(" Hit ");
             if (moveForward === true){
@@ -473,4 +472,4 @@ function animate() {
 animate()
 document.querySelector('aside').innerHTML = "<p>Use WASD to move\n</p>" +
     "<p>Use mouse to look around\n</p>" +
-    "<p>Click to shoot</p>"+ "<p>Shoot the Skuulll</p>"
+    "<p>Click to shoot</p>"+ "<p>Press Esc to leave game screen\n</p>" + "<p>Objective: Shoot the Skull</p>"
